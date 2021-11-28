@@ -2,114 +2,161 @@
 # ======================
 # Instead of a single class, an object is annotated with an identification string that includes everything that can be said about the object:
 # "Copepoda !Calanoida sex:female:ovigerous view:lateral" (A copepod, species unknown but we know that it is not a calanoid, a female carrying eggs, seen from the side.)
-# 
+#
 # Identification strings can also be used to search the database for objects with the specified properties.
 #
 # Taxons
 # ======
-# Taxons are introduced with the <name>:: syntax.
+# In the taxonomy file, taxons are introduced with the <name>:: syntax.
 # Its contents are indented.
 # An object is assigned a taxon by setting its identification string to "<taxon>".
 #
 # Tags
 # ====
 # A taxon can define tags that are valid for all sub-taxons.
-# Tags are defined using the <name>~=<pattern> syntax.
+# Tags are defined using the `<name> ~= <pattern>` syntax.
 # Valid patterns are:
-#   * Any string
-#   ? A boolean flag (yes/no)
-#   : A reference to a taxon (TODO)
+#       * Any string
+#       ? A boolean flag (yes/no)
+#       : A reference to another taxon (TODO)
 # These can be combined using |.
-# 
+#
 # Generally, one tag can only applied one time for an object.
-# The exception are for example like and Mix::with. These can be applied multiple times.
+# The exception are for example `like` and `Mix::with`. These can be applied multiple times.
 #
 # Negation
 # ========
 # Annotations can be *positive* (the annotated object is known to exhibit this property) or *negative* (the annotated object is known to not exhibit this property).
 # If a certain property is not annotated, it means that it was not yet annotated or can not be decided.
 #
-# Counting objects
+# Counting Objects
 # ================
 # Tags are not exclusive, an object can have any combination of positive and negative tags or the lack thereof.
 # In the general case, THESE EQUATIONS ARE FALSE:
-#   Count(Copepoda) = Count(Copepoda sex:female) + Count(Copepoda sex:male)
-#   Count(Copepoda) = Count(Copepoda sex:female:ovigerous) + Count(Copepoda with-lipid-sac)
-#   Count(Copepoda) = Count(Calanoida) + Count(Oncaea)
+#       Count(Copepoda) = Count(Copepoda sex:female) + Count(Copepoda sex:male)
+#       Count(Copepoda) = Count(Copepoda sex:female:ovigerous) + Count(Copepoda with-lipid-sac)
+#       Count(Copepoda) = Count(Calanoida) + Count(Oncaea)
 # If you want to know the number of copepods in a dataset, you need to use the inference functions of the library:
-#   "Calanoida with-lipid-sac" is "Copepoda" => TRUE
-#   "Animalia" is "Copepoda" => FALSE
-#   "Copepoda" is "Copepoda with-lipid-sac" => FALSE
+#       "Calanoida with-lipid-sac" is "Copepoda" => TRUE
+#       "Animalia" is "Copepoda" => FALSE
+#       "Copepoda" is "Copepoda with-lipid-sac" => FALSE
 # (This kind of inference is also needed in a purely hierarchical taxonomy without tags[#f1]_.)
-# 
+#
 # .. [#f1] "Then we need a post-processing function that can aggregate counts/concentrations at higher levels (to get all Copepoda for example)
 #       but such an aggregation function is needed even for the purely taxonomic aspect anyway (e.g. I want the biomass of all Crustacea per sample)."
 #       https://github.com/ecotaxa/ecotaxa_dev/issues/456#issuecomment-691666231
+#
+# Final Annotations?
+# ==================
+# Conventionally, if an object is annotated as "Copepoda", but not further (e.g. "Harpaticoida" or "Calanoida"),
+# it means that either (i) it is neither of the current subclasses OR (ii) or no attempt has yet been made to classify the object further.
+# In an identification string, we have the possibility of make these explicit:
+#       (i) "Copepoda !Harpaticoida !Calanoida" => A copepod but neither Harpaticoida, nor Calanoida. If a new taxon is added to the taxonomy, it could be that one.
+#       (ii) "Copepoda" => Certainly a copepod, could be classified further.
+#
+# One might be tempted to use a "final" marker (e.g. "Copepoda.") to classify an object and make it explicit that it is impossible to tell anything further (due to image quality, etc).
+# The problem is: (a) Someone else might very well be able to do so. (b) Even if the sub-taxon can not specified, there might still be tags that could be annotated. (c) The taxonomy might change.
+#
+# Taxonomy Files
+# ==============
+# The taxonomy of a project is described in a file such as this one.
+# This allows users to download the file and use it together with the library to do inference (see "Counting Objects").
+# Nodes and Tags can be annotated with comments. This allows to auto-generate a human-readable annotation guide from this file.
+#
+# User Interface
+# ==============
+# Taxa are presented in a tree. Additionally, the applicable tags are shown.
+# Objects can be drag-dropped onto taxa and tags.
+# Objects can be selected and assigned an identification string.
+# Additionally to the contained objects, candidate objects can be shown and added.
+# Similarity is calculated using a distance metric in a suitable feature space.
+# Non-fitting candidates are rejected with a negative or alternative annotation (e.g. "!Copepoda", "!stage:egg" or "view:dorsal").
+# (Negative annotations help to display only relevant candidates and help future annotators. Furthermore, they can be used to improve the feature extractor.)
+#
+#       /                               | Copepoda stage:egg view:lateral
+#       +- Living                       +--------------------------------
+#       |  +- Animalia                  |
+#       |  |  ...  +- > Copepoda        |            <objects>
+#       |  |  ...  +- Mollusca          |
+#       |  |  ...  +- ...               |
+#       --------------------------------+
+#       [X] stage:egg  [X] view:lateral |
+#       [ ] ...                         |
+
 
 
 ## General tags
 
 # The object is not focused (yes/no)
-badfocus~=?
+badfocus ~= ?
 
 # The object is a duplicate of some other object (yes/no/other object ID)
-duplicate~=?|*
+duplicate ~= ? | *
 
 # Besides its primary category, the object looks like another category. (Can be applied multiple times.)
 # Example: "Copepoda like:Detritus like:Ostracoda" or "Detritus !like:Copepoda"
-like*~=:
+like* ~= :
 
-# The object is only a part of the primary category
+# The object is only a part of the annotated organism
 # Example: "Chaetognatha part:head"
-part~=?|head|tail
+part ~= ? | head | tail
 
 # All living things
 Living::
     # Some default life stages (can be specified in more detail in sub-nodes)
-    stage~=egg|adult
+    stage ~= egg | adult
 
     # Some default sexes
-    sex~=male|female|hermaphrodite
+    sex ~= male | female | hermaphrodite
 
     # The organism carries a parasite (yes/no/taxon)
     # Example: "Copepoda parasite", "Copepoda !parasite", or "Copepoda parasite:Blastodinium"
-    parasite*~=?|:
+    parasite* ~= ? | :
 
     Animalia::
         # Fish are a paraphyletic group
-        fish~=?
+        fish ~= ?
 
         Crustacea::
 
             Ostracoda::
 
             Copepoda::
+                # Metadata like this allows to auto-generate links to WoRMS
                 marinespecies.org:taxname = 1080
 
                 # Copepoda have their special live stages
                 # Example: "Copepoda egg"
-                stage~=egg|nauplius|copepodit|adult
+                stage ~= egg | nauplius | copepodit | adult
 
                 # Nauplii have 6 sub-stages
                 # Example: "Copepoda stage:nauplius:2"
-                stage:nauplius~={1..6}
+                stage:nauplius ~= {1..6}
 
                 # Copepodits have 5 sub-stages
                 # Example: "Copepoda stage:copepodit:1"
-                stage:copepodit~={1..5}
-                
+                stage:copepodit ~= {1..5}
+
                 # A female copepod bearing eggs
                 # (Would ovigerous be a better name?)
                 # Example: "Copepoda sex:female:ovigerous" or "Copepoda sex:female:!ovigerous"
-                sex:female:ovigerous~=?
+                sex:female:ovigerous ~= ?
 
                 # A copepod with a visible lipid sac
-                lipid-sac~=?
+                lipid-sac ~= ?
 
 
                 # The copepod is seen from the side, from top or bottom or from front or back
                 # Example: "Copepoda view:lateral"
-                view~=lateral|dorsal-ventral|anterior-posterior
+                view ~= lateral | dorsal-ventral | anterior-posterior
+
+                Harpacticoida::
+                    # Harpacticoids are distinguished from other copepods by the presence of only a very short pair of first antennae.
+                    # The second pair of antennae are biramous, and the major joint within the body is located between the fourth and fifth body segments.
+                    # They typically have a wide abdomen, and often have a somewhat worm-like body.
+                    # (Robert D. Barnes (1982). Invertebrate Zoology. Philadelphia, PA: Holt-Saunders International. p. 692. ISBN 978-0-03-056747-6.)
+
+                    en.wikipedia.org:acticle = Harpacticoida
 
                 Calanoida::
                     Calanus::
@@ -123,15 +170,15 @@ Living::
 
                 Oncaea::
 
-            
+
             Pleuroncodes::
 
         Mollusca::
             # Example: "Mollusca stage:veliger"
-            stage~=egg|veliger|adult
+            stage ~= egg | veliger | adult
 
         Cephalopoda::
-            view~=lateral|oral-aboral
+            view ~= lateral | oral-aboral
 
         Trichodesmium::
             Tuft::
@@ -140,7 +187,7 @@ Living::
                 Non-Radial::
         Cnidaria::
             # Example: "Cnidaria view:lateral"
-            view~=lateral|oral-aboral
+            view ~= lateral | oral-aboral
 
         Harosa::
             Rhizaria::
@@ -149,7 +196,7 @@ Living::
 
             Dinoflagellata::
                 Blastodinium::
-        
+
         Polychaeta::
 
         Ctenophora::
@@ -164,7 +211,7 @@ Detritus::
 
 Mix::
     # Example: "Mix with:Copepoda with:Detritus"
-    with*~=*
+    with* ~= *
 
 Artifact::
     =artefact
