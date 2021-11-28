@@ -1,0 +1,179 @@
+# Identification Strings
+# ======================
+# Instead of a single class, an object is annotated with an identification string that includes everything that can be said about the object:
+# "Copepoda !Calanoida sex:female:ovigerous view:lateral" (A copepod, species unknown but we know that it is not a calanoid, a female carrying eggs, seen from the side.)
+# 
+# Identification strings can also be used to search the database for objects with the specified properties.
+#
+# Taxons
+# ======
+# Taxons are introduced with the <name>:: syntax.
+# Its contents are indented.
+# An object is assigned a taxon by setting its identification string to "<taxon>".
+#
+# Tags
+# ====
+# A taxon can define tags that are valid for all sub-taxons.
+# Tags are defined using the <name>~=<pattern> syntax.
+# Valid patterns are:
+#   * Any string
+#   ? A boolean flag (yes/no)
+#   : A reference to a taxon (TODO)
+# These can be combined using |.
+# 
+# Generally, one tag can only applied one time for an object.
+# The exception are for example like and Mix::with. These can be applied multiple times.
+#
+# Negation
+# ========
+# Annotations can be *positive* (the annotated object is known to exhibit this property) or *negative* (the annotated object is known to not exhibit this property).
+# If a certain property is not annotated, it means that it was not yet annotated or can not be decided.
+#
+# Counting objects
+# ================
+# Tags are not exclusive, an object can have any combination of positive and negative tags or the lack thereof.
+# In the general case, THESE EQUATIONS ARE FALSE:
+#   Count(Copepoda) = Count(Copepoda sex:female) + Count(Copepoda sex:male)
+#   Count(Copepoda) = Count(Copepoda sex:female:ovigerous) + Count(Copepoda with-lipid-sac)
+#   Count(Copepoda) = Count(Calanoida) + Count(Oncaea)
+# If you want to know the number of copepods in a dataset, you need to use the inference functions of the library:
+#   "Calanoida with-lipid-sac" is "Copepoda" => TRUE
+#   "Animalia" is "Copepoda" => FALSE
+#   "Copepoda" is "Copepoda with-lipid-sac" => FALSE
+# (This kind of inference is also needed in a purely hierarchical taxonomy without tags[#f1]_.)
+# 
+# .. [#f1] "Then we need a post-processing function that can aggregate counts/concentrations at higher levels (to get all Copepoda for example)
+#       but such an aggregation function is needed even for the purely taxonomic aspect anyway (e.g. I want the biomass of all Crustacea per sample)."
+#       https://github.com/ecotaxa/ecotaxa_dev/issues/456#issuecomment-691666231
+
+
+## General tags
+
+# The object is not focused (yes/no)
+badfocus~=?
+
+# The object is a duplicate of some other object (yes/no/other object ID)
+duplicate~=?|*
+
+# Besides its primary category, the object looks like another category. (Can be applied multiple times.)
+# Example: "Copepoda like:Detritus like:Ostracoda" or "Detritus !like:Copepoda"
+like*~=:
+
+# The object is only a part of the primary category
+# Example: "Chaetognatha part:head"
+part~=?|head|tail
+
+# All living things
+Living::
+    # Some default life stages (can be specified in more detail in sub-nodes)
+    stage~=egg|adult
+
+    # Some default sexes
+    sex~=male|female|hermaphrodite
+
+    # The organism carries a parasite (yes/no/taxon)
+    # Example: "Copepoda parasite", "Copepoda !parasite", or "Copepoda parasite:Blastodinium"
+    parasite*~=?|:
+
+    Animalia::
+        # Fish are a paraphyletic group
+        fish~=?
+
+        Crustacea::
+
+            Ostracoda::
+
+            Copepoda::
+                marinespecies.org:taxname = 1080
+
+                # Copepoda have their special live stages
+                # Example: "Copepoda egg"
+                stage~=egg|nauplius|copepodit|adult
+
+                # Nauplii have 6 sub-stages
+                # Example: "Copepoda stage:nauplius:2"
+                stage:nauplius~={1..6}
+
+                # Copepodits have 5 sub-stages
+                # Example: "Copepoda stage:copepodit:1"
+                stage:copepodit~={1..5}
+                
+                # A female copepod bearing eggs
+                # (Would ovigerous be a better name?)
+                # Example: "Copepoda sex:female:ovigerous" or "Copepoda sex:female:!ovigerous"
+                sex:female:ovigerous~=?
+
+                # A copepod with a visible lipid sac
+                lipid-sac~=?
+
+
+                # The copepod is seen from the side, from top or bottom or from front or back
+                # Example: "Copepoda view:lateral"
+                view~=lateral|dorsal-ventral|anterior-posterior
+
+                Calanoida::
+                    Calanus::
+                        Calanus+finmarchicus::
+                            marinespecies.org:taxname = 104464
+                        Microcalanus::
+                            marinespecies.org:taxname = 104164
+
+                    Metridia+longa::
+                        marinespecies.org:taxname = 104632
+
+                Oncaea::
+
+            
+            Pleuroncodes::
+
+        Mollusca::
+            # Example: "Mollusca stage:veliger"
+            stage~=egg|veliger|adult
+
+        Cephalopoda::
+            view~=lateral|oral-aboral
+
+        Trichodesmium::
+            Tuft::
+            Puff::
+                Radial::
+                Non-Radial::
+        Cnidaria::
+            # Example: "Cnidaria view:lateral"
+            view~=lateral|oral-aboral
+
+        Harosa::
+            Rhizaria::
+                Foraminifera::
+                Appendicularia::
+
+            Dinoflagellata::
+                Blastodinium::
+        
+        Polychaeta::
+
+        Ctenophora::
+
+        Chaetognatha::
+
+        Salpida::
+
+Detritus::
+    Aggregate::
+    Fiber::
+
+Mix::
+    # Example: "Mix with:Copepoda with:Detritus"
+    with*~=*
+
+Artifact::
+    =artefact
+
+    Bubble::
+        =bubbles
+
+    Scratch::
+
+    Seafloor::
+
+Unknown::

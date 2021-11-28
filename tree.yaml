@@ -1,0 +1,85 @@
+tags:
+    dubious: "?"
+    duplicate: "?|*"
+    badfocus: "?"
+    part: "?|head|tail"
+    like: "*"
+    cut: "?"
+children:
+    Living:
+        tags:
+            egg: "?"
+            adult: "?"
+            fish: "?"
+        children:
+            Animalia:
+                children:
+                    Crustacea:
+                        children:
+                            Copepoda:
+                                tags:
+                                    nauplius: "?|{1..6}"
+                                    copepodit: "?|{1..5}"
+                                    view: lateral|dorsal-ventral|anterior-posterior
+                                    egg-bearing: "?"
+                                children:
+                                    Calanoida:
+                            Pleuroncodes:
+                    Mollusca:
+                        tags:
+                            veliger: "?"
+                        children:
+                            Cephalopoda:
+
+                    Trichodesmium:
+                         children:
+                             Tuft:
+                             Puff:
+                                 children:
+                                     Radial:
+                                     Non-Radial:
+
+                    Cnidaria:
+                        tags:
+                            view: lateral|oral-aboral
+                            medusa: "?"
+                            polyp: "?"
+                            
+                    Rhizaria:
+                        children:
+                            Foraminifera:
+                            Acantharia:
+                            Radiolaria:
+            
+                    Appendicularia:
+
+                    Polychaeta:
+                        children:
+                            Poeobius:
+                            Flota:
+
+                    Ctenophora:
+                    
+                    Chaetognatha:
+                    
+                    Salpida:
+            
+    Detritus:
+        children:
+            Aggregate:
+            Fiber:
+            Feces:
+            
+    Mix:
+    
+    Artifact:
+        aliases:
+            - artefact
+        children:
+            Bubble:
+                aliases:
+                    - bubbles
+            Scratch:
+            Seafloor:
+            
+    Unknown:
