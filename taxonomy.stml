@@ -123,7 +123,7 @@ Living::
 
             Copepoda::
                 # Metadata like this allows to auto-generate links to WoRMS
-                marinespecies.org:taxname = 1080
+                marinespecies.org = 1080
 
                 # Copepoda have their special live stages
                 # Example: "Copepoda egg"
@@ -138,8 +138,7 @@ Living::
                 stage:copepodit ~= {1..5}
 
                 # A female copepod bearing eggs
-                # (Would ovigerous be a better name?)
-                # Example: "Copepoda sex:female:ovigerous" or "Copepoda sex:female:!ovigerous"
+                # Example: "Copepoda sex:female:ovigerous" or "Copepoda sex:female !sex:female:ovigerous"
                 sex:female:ovigerous ~= ?
 
                 # A copepod with a visible lipid sac
@@ -156,17 +155,17 @@ Living::
                     # They typically have a wide abdomen, and often have a somewhat worm-like body.
                     # (Robert D. Barnes (1982). Invertebrate Zoology. Philadelphia, PA: Holt-Saunders International. p. 692. ISBN 978-0-03-056747-6.)
 
-                    en.wikipedia.org:acticle = Harpacticoida
+                    en.wikipedia.org = Harpacticoida
 
                 Calanoida::
                     Calanus::
-                        Calanus+finmarchicus::
-                            marinespecies.org:taxname = 104464
+                        Calanus_finmarchicus::
+                            marinespecies.org = 104464
                         Microcalanus::
-                            marinespecies.org:taxname = 104164
+                            marinespecies.org = 104164
 
-                    Metridia+longa::
-                        marinespecies.org:taxname = 104632
+                    Metridia_longa::
+                        marinespecies.org = 104632
 
                 Oncaea::
 
