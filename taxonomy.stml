@@ -93,7 +93,7 @@ badfocus ~= ?
 # The object is a duplicate of some other object (yes/no/other object ID)
 duplicate ~= ? | *
 
-# Besides its primary category, the object looks like another category. (Can be applied multiple times.)
+# Besides its primary category, the object looks like another category. (Can be applied multiple times to a single object.)
 # Example: "Copepoda like:Detritus like:Ostracoda" or "Detritus !like:Copepoda"
 like* ~= :
 

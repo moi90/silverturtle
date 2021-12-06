@@ -1,7 +1,8 @@
 import re
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, List, Mapping, Optional, Tuple
 import itertools
 import textwrap
+import uuid
 
 
 class Block(List["Expression"]):
@@ -230,12 +231,38 @@ def format_block(block: Block):
     return "\n".join(_comparison())
 
 
+def children_to_list(d: dict, name):
+    d = d.copy()
+    d["name"] = name
+    if "children" in d:
+        d["children"] = [children_to_list(v, name=k) for k, v in d["children"].items()]
+
+    return d
+
+
+def insert_id(d: dict):
+    d = d.copy()
+    if "id" not in d:
+        d["id"] = uuid.uuid4().hex
+
+    if "children" in d:
+        d["children"] = {k: insert_id(v) for k, v in d["children"].items()}
+
+    return d
+
+
 if __name__ == "__main__":
     import argparse
     from pprint import pprint
+    import os.path
+    import json
+    import yaml
 
     parser = argparse.ArgumentParser()
     parser.add_argument("taxonomy_fn")
+    parser.add_argument("--output", "-o")
+    parser.add_argument("--list", "-l", action="store_true")
+    parser.add_argument("--id", action="store_true")
     args = parser.parse_args()
 
     with open(args.taxonomy_fn) as f:
@@ -243,4 +270,21 @@ if __name__ == "__main__":
 
     print(format_block(ast))
 
-    pprint(ast2dict(ast))
+    d = ast2dict(ast)
+
+    if args.id:
+        d = insert_id(d)
+
+    if args.list:
+        d = children_to_list(d, "Root")
+
+    pprint(d)
+
+    if args.output:
+        ext = os.path.splitext(args.output)[1]
+        if ext == ".json":
+            with open(args.output, "w") as f:
+                json.dump(d, f, indent="  ")
+        elif ext == ".yaml":
+            with open(args.output, "w") as f:
+                yaml.dump(d, f, yaml.SafeDumper)
